@@ -2,6 +2,7 @@
 const nextConfig = {
   reactStrictMode: true,
   transpilePackages: ["@quiz-master/shared-types"],
+  skipTrailingSlashRedirect: true,
   async rewrites() {
     return [
       {

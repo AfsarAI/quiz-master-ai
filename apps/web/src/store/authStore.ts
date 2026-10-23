@@ -11,20 +11,26 @@ interface AuthState {
   initialize: () => void;
 }
 
-export const useAuthStore = create<AuthState>((set) => ({
+export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
   token: null,
   isLoading: true,
   setAuth: (user: User, token: string) => {
     if (typeof window !== "undefined") {
-      localStorage.setItem("quizmaster_token", token);
-      localStorage.setItem("quizmaster_user", JSON.stringify(user));
+      try {
+        localStorage.setItem("quizmaster_token", token);
+        localStorage.setItem("quizmaster_user", JSON.stringify(user));
+      } catch (e) {
+        console.error("Failed to persist auth to localStorage", e);
+      }
     }
     set({ user, token, isLoading: false });
   },
   setUser: (user: User) => {
     if (typeof window !== "undefined") {
-      localStorage.setItem("quizmaster_user", JSON.stringify(user));
+      try {
+        localStorage.setItem("quizmaster_user", JSON.stringify(user));
+      } catch (e) {}
     }
     set({ user });
   },
@@ -36,18 +42,23 @@ export const useAuthStore = create<AuthState>((set) => ({
     set({ user: null, token: null, isLoading: false });
   },
   initialize: () => {
+    const current = get();
+    if (current.token && current.user && !current.isLoading) {
+      return;
+    }
+
     if (typeof window !== "undefined") {
-      const token = localStorage.getItem("quizmaster_token");
-      const userStr = localStorage.getItem("quizmaster_user");
-      if (token && userStr) {
-        try {
+      try {
+        const token = localStorage.getItem("quizmaster_token");
+        const userStr = localStorage.getItem("quizmaster_user");
+        if (token && userStr) {
           const user = JSON.parse(userStr);
           set({ user, token, isLoading: false });
           return;
-        } catch (e) {
-          localStorage.removeItem("quizmaster_token");
-          localStorage.removeItem("quizmaster_user");
         }
+      } catch (e) {
+        localStorage.removeItem("quizmaster_token");
+        localStorage.removeItem("quizmaster_user");
       }
     }
     set({ user: null, token: null, isLoading: false });

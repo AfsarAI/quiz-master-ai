@@ -23,7 +23,7 @@ function QuizCreateForm() {
   const searchParams = useSearchParams();
   const preselectedDocId = searchParams.get("docId");
 
-  const { token, initialize } = useAuthStore();
+  const { token, isLoading: authLoading, initialize } = useAuthStore();
   const [documents, setDocuments] = useState<Document[]>([]);
   const [selectedDocId, setSelectedDocId] = useState(preselectedDocId || "");
   const [title, setTitle] = useState("");
@@ -49,8 +49,10 @@ function QuizCreateForm() {
   }, [initialize]);
 
   useEffect(() => {
+    if (authLoading) return;
+
     if (!token && typeof window !== "undefined") {
-      router.push("/login");
+      router.replace("/login");
       return;
     }
 

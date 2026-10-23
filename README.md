@@ -193,96 +193,216 @@ erDiagram
 
 ---
 
-## 🚀 Quickstart Guide
+## 💾 Storage Architecture: Relational, Cache, and Object Storage
 
-### 1. Prerequisites
-- Docker & Docker Compose
-- Node.js v18+ & npm
-- Python 3.12+
+Understanding the distinction between Quiz-Master-AI's persistence tiers helps clarify the local development workflow:
 
-### 2. Environment Setup
-Copy the canonical configuration:
-```bash
-cp .env.example .env
-```
+| Component | Technology | Role in Quiz-Master-AI | Local Development Mode | Cloud Cost / Licensing |
+|---|---|---|---|---|
+| **Relational & Vectors** | **PostgreSQL 16 + pgvector** | Stores users, quizzes, questions, options, attempts, evaluations, and dense 1536-dim RAG vector embeddings. | Docker container on host port **5435** (`quizmaster_postgres`). | **100% Free** & Open Source (PostgreSQL License). |
+| **In-Memory Cache & Broker** | **Redis 7** | Manages rate limiting, short-lived session caches, and Celery task broker queues. | Docker container on host port **6382** (`quizmaster_redis`). | **100% Free** & Open Source (BSD 3-Clause). |
+| **Default Document Storage** | **Local Filesystem** (`./storage_uploads`) | Stores uploaded study materials (PDF, DOCX, TXT) directly in a secure, sandboxed project directory with magic-byte validation and path-traversal defense. | Enabled by default (`STORAGE_BACKEND="local"`). | **100% Free**. Zero external dependencies or cloud accounts. |
+| **Optional Object Storage** | **MinIO (S3-Compatible)** | Enterprise S3-compliant bucket storage for organizations requiring AWS S3 API parity in staging/production. | Optional Docker profile (`docker compose --profile minio up -d minio`). | **100% Free** for local development (GNU AGPLv3). No AWS account required. |
 
-### 3. Spin Up Infrastructure with Docker
-```bash
-docker compose up -d postgres redis minio
-```
-> **Non-conflicting Ports**:
-> - PostgreSQL 16 + pgvector: `localhost:5435`
-> - Redis 7: `localhost:6382`
-> - MinIO Object Storage: `localhost:9002` (API) / `localhost:9003` (Console)
-
-### 4. Build Shared Types & Run Database Migrations
-```bash
-# Build shared TypeScript package
-npm --prefix packages/shared-types run build
-
-# Apply database migrations to PostgreSQL
-cd services/api
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-alembic upgrade head
-```
-
-### 5. Run the FastAPI Backend
-```bash
-uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
-```
-Interactive Swagger OpenAPI documentation: `http://localhost:8000/docs`
-
-### 6. Run Backend Tests
-Run the comprehensive test suite verifying authentication, document pipeline, grounded quiz generation, zero answer exposure, and server-side evaluation:
-```bash
-cd services/api
-pytest tests/ -v
-```
-
-### 7. Run the Next.js Web Application
-```bash
-npm --prefix apps/web run dev
-```
-Open `http://localhost:3001` in your browser.
-
-Demo Accounts:
-- **Student**: `student@example.com` / `Password123!`
-- **Educator**: `educator@example.com` / `Password123!`
-
-### 8. Run the React Native Mobile Application
-```bash
-npm --prefix apps/mobile start
-```
-Scan the QR code with Expo Go on your mobile device or press `a` for Android Emulator / `i` for iOS Simulator.
+### 💡 Does MinIO or Local Storage Require Paid Cloud Services?
+- **No paid cloud services or AWS accounts are required**. MinIO is an open-source, S3-compliant object server. When executed locally in Docker on Ubuntu, it runs entirely on your own machine at zero cost.
+- **Recommended Local Default**: For fast, zero-friction development without Docker image pull restrictions or registry authentication issues, Quiz-Master-AI defaults to **Local Filesystem Storage** (`STORAGE_BACKEND="local"`). Documents are securely stored in `./storage_uploads` on your local disk with strict MIME type checking, size enforcement (25MB), and directory-traversal protection.
+- **Commercial/Enterprise MinIO Note**: While MinIO's community edition is free under AGPLv3, commercial enterprise features in managed multi-tenant cloud deployments require commercial MinIO licensing. However, this is never needed for local development or standard deployments of Quiz-Master-AI.
 
 ---
 
-## 🔧 Troubleshooting & Common Operations
+## 🚀 Ubuntu 24.04 Verified Local Setup Guide
 
-### 1. Database Connection & Port Conflicts
-- **Port Mapping**: Docker Compose uses non-standard ports to prevent collisions with existing system services:
-  - PostgreSQL 16 + pgvector: `localhost:5435`
-  - Redis 7: `localhost:6382`
-  - MinIO S3: `localhost:9002` (API), `localhost:9003` (Console)
-- **Check Migration Status**:
-  ```bash
-  cd services/api
-  alembic current
-  alembic heads
-  ```
+Follow these exact, copy-pasteable instructions to set up, migrate, seed, and run Quiz-Master-AI on Ubuntu 24.04 LTS.
 
-### 2. Running Without Docker / In-Memory Mode
-- The backend features automatic fallback support for `sqlite+aiosqlite:///./quizmaster_ai.db` in `DATABASE_URL` if PostgreSQL is not running.
-- In test environments, tests run synchronously with an isolated async SQLite engine requiring zero Docker infrastructure.
+### 1. Prerequisites Installation (Ubuntu 24.04)
 
-### 3. AI Provider Keys & Offline Fallback
-- If `GEMINI_API_KEY` or `OPENAI_API_KEY` is not set in `.env`, the system does **not** fail or raise unhandled exceptions. Instead, it utilizes deterministic local embeddings and grounded question fallbacks for development.
-- To use live Gemini 3.8 / 1.5 Flash models, obtain a key from [Google AI Studio](https://aistudio.google.com/) and assign `GEMINI_API_KEY="your-key"` in `.env`.
+Open a terminal and ensure Docker, Python 3.12, and Node.js 18+ are installed:
 
-### 4. MinIO / Local File Storage
-- If MinIO is not reachable, the document storage service seamlessly falls back to `./storage_uploads` on disk after a 1-second connect timeout.
+```bash
+# Update package lists
+sudo apt update
+
+# Install Python 3.12, venv, and development tools
+sudo apt install -y python3 python3-venv python3-pip curl git jq
+
+# Verify Docker and Docker Compose
+docker --version
+docker compose version
+```
+
+### 2. Environment Configuration
+
+From the repository root (`/home/afsarai/Desktop/quiz-master-ai`):
+
+```bash
+# Copy the canonical environment template
+cp .env.example .env
+```
+
+The default `.env` is pre-configured for local Ubuntu development:
+- Relational Database: `postgresql+asyncpg://quizmaster:quizmaster_secret@localhost:5435/quizmaster_ai`
+- Cache: `redis://localhost:6382/0`
+- Document Storage: `STORAGE_BACKEND="local"` (stores files safely in `./storage_uploads`)
+
+### 3. Start Core Infrastructure (PostgreSQL & Redis)
+
+Start only the essential relational database and cache containers (avoiding MinIO pull errors):
+
+```bash
+# From repository root:
+docker compose up -d postgres redis
+```
+
+Verify the containers are healthy and running on their dedicated host ports:
+```bash
+docker compose ps
+```
+> **Port Allocation**:
+> - **PostgreSQL 16 + pgvector**: `localhost:5435` (mapped to internal `5432`)
+> - **Redis 7**: `localhost:6382` (mapped to internal `6379`)
+> 
+> *(Optional: If you wish to use MinIO S3 object storage instead of local disk, run `docker compose --profile minio up -d minio` and set `STORAGE_BACKEND="s3"` in `.env`)*.
+
+### 4. Backend Virtual Environment & Dependencies
+
+Set up the Python 3.12 virtual environment in `services/api`:
+
+```bash
+# Navigate to the API service directory
+cd services/api
+
+# Create and activate virtual environment
+python3 -m venv .venv
+source .venv/bin/activate
+
+# Upgrade pip and install all backend requirements
+pip install --upgrade pip
+pip install -r requirements.txt
+```
+
+### 5. Run Database Migrations (Alembic)
+
+Apply the database schema and pgvector extension to PostgreSQL:
+
+```bash
+# Ensure you are in services/api with the virtual environment activated:
+alembic upgrade head
+```
+
+Verify that the migration succeeded:
+```bash
+alembic current
+# Expected output: 001_initial_schema (head)
+```
+
+### 6. Seed Demo Accounts (Student & Educator)
+
+Execute the idempotent seeder script to populate the documented demo credentials with secure Argon2id hashes:
+
+```bash
+# Ensure you are in services/api with the virtual environment activated:
+python scripts/seed_demo_data.py
+```
+> **Output**:
+> `[SUCCESS] Demo seeding complete: created=2, preserved=0, errors=0`
+>
+> *(Note: The seeder is idempotent. Running it repeatedly preserves existing accounts without duplicate errors. Use `--reset-passwords` only if you need to restore the initial demo passwords).*
+
+### 7. Run the FastAPI Backend
+
+Start the FastAPI application with auto-reload:
+
+```bash
+# From services/api (with .venv active):
+python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+```
+
+Interactive API documentation and health endpoints:
+- **Swagger UI**: `http://localhost:8000/docs` (automatically redirects to `http://localhost:8000/api/v1/docs`)
+- **OpenAPI Schema**: `http://localhost:8000/openapi.json` (or `http://localhost:8000/api/v1/openapi.json`)
+- **API Health Check**: `http://localhost:8000/health` or `http://localhost:8000/api/v1/health`
+
+### 8. Build Shared Types & Run Next.js Web Frontend
+
+Open a new terminal window at the repository root:
+
+```bash
+# 1. Build the shared TypeScript contracts
+npm --prefix packages/shared-types run build
+
+# 2. Start the Next.js development server
+npm --prefix apps/web run dev
+```
+
+Open `http://localhost:3001` in your browser.
+
+---
+
+## 🔑 Documented Demo Accounts
+
+You can sign in immediately at `http://localhost:3001/login` or via the fast-fill buttons on the login page:
+
+| Role | Email | Password | Intended Capabilities |
+|---|---|---|---|
+| **Student** | `student@example.com` | `Password123!` | Take timed exams, view question palette, submit answers, review results, and access personal weakness heatmap. |
+| **Educator** | `educator@example.com` | `Password123!` | Upload syllabus documents, trigger RAG question generation, review citations, create quizzes, and view cohort analytics. |
+
+---
+
+## 🔍 Database Inspection & Verification Commands
+
+Inspect the running database directly inside the Docker container at any time:
+
+```bash
+# From repository root:
+# Check all created tables:
+docker compose exec postgres psql -U quizmaster -d quizmaster_ai -c "\dt"
+
+# Inspect the demo user accounts:
+docker compose exec postgres psql -U quizmaster -d quizmaster_ai -c "SELECT id, email, full_name, role, is_active FROM users;"
+```
+
+---
+
+## 🧪 Running Automated Tests
+
+### Backend Test Suite (Pytest)
+From `services/api` (with `.venv` active):
+```bash
+cd services/api
+source .venv/bin/activate
+pytest tests/ -v
+```
+*Executes all 13 tests covering authentication, idempotent seeding, Argon2id security, local storage & path-traversal defenses, document ingestion, zero-trust exam delivery, and server-side evaluation.*
+
+### Web Frontend Build & Type Check
+From repository root:
+```bash
+npm --prefix apps/web run build
+```
+
+### Mobile TypeScript Check
+From repository root:
+```bash
+npx tsc --project apps/mobile/tsconfig.json --noEmit
+```
+
+---
+
+## 🛑 Safely Stopping Services Without Data Loss
+
+To pause development without deleting your database or uploaded documents:
+
+```bash
+# Stop containers safely (preserves PostgreSQL data volume and local uploads):
+docker compose stop
+
+# Restart containers later:
+docker compose start
+
+# CAUTION: Never run 'docker compose down -v' unless you want to permanently erase your local database!
+```
 
 ---
 

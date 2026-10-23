@@ -26,6 +26,7 @@ class Settings(BaseSettings):
     REDIS_URL: str = "redis://localhost:6382/0"
 
     # Object Storage
+    STORAGE_BACKEND: str = "local"  # "local" (default) or "s3"
     S3_ENDPOINT: str = "http://localhost:9002"
     S3_ACCESS_KEY: str = "minioadmin"
     S3_SECRET_KEY: str = "minioadmin"
@@ -64,7 +65,7 @@ class Settings(BaseSettings):
         return ["*"]
 
     model_config = SettingsConfigDict(
-        env_file=(".env", "../../.env"),
+        env_file=(".env", "../.env", "../../.env"),
         env_file_encoding="utf-8",
         case_sensitive=True,
         extra="ignore"

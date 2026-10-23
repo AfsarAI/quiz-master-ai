@@ -21,7 +21,7 @@ import {
 
 export default function DocumentsPage() {
   const router = useRouter();
-  const { token, initialize } = useAuthStore();
+  const { token, isLoading: authLoading, initialize } = useAuthStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [documents, setDocuments] = useState<Document[]>([]);
@@ -51,14 +51,16 @@ export default function DocumentsPage() {
   };
 
   useEffect(() => {
+    if (authLoading) return;
+
     if (!token && typeof window !== "undefined") {
-      router.push("/login");
+      router.replace("/login");
       return;
     }
     if (token) {
       loadDocuments();
     }
-  }, [token, router]);
+  }, [token, authLoading, router]);
 
   // Polling hook for active document processing
   useEffect(() => {

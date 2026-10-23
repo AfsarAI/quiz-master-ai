@@ -1,5 +1,4 @@
 # Local development overrides
-version: "3.8"
 services:
   api:
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload

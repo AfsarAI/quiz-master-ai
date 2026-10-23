@@ -70,6 +70,7 @@ async def get_attempt_result(
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
+@router.get("", response_model=List[RecentAttemptItem])
 @router.get("/", response_model=List[RecentAttemptItem])
 async def list_user_attempts(
     current_user: User = Depends(get_current_user),

@@ -22,7 +22,7 @@ import {
 
 export default function AnalyticsPage() {
   const router = useRouter();
-  const { token, initialize } = useAuthStore();
+  const { token, isLoading: authLoading, initialize } = useAuthStore();
   const [summary, setSummary] = useState<AnalyticsSummary | null>(null);
   const [weakAreas, setWeakAreas] = useState<UserWeakArea[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -34,8 +34,10 @@ export default function AnalyticsPage() {
   }, [initialize]);
 
   useEffect(() => {
+    if (authLoading) return;
+
     if (!token && typeof window !== "undefined") {
-      router.push("/login");
+      router.replace("/login");
       return;
     }
 

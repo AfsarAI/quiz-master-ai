@@ -23,7 +23,7 @@ import {
 
 export default function DashboardPage() {
   const router = useRouter();
-  const { user, token, initialize } = useAuthStore();
+  const { user, token, isLoading: authLoading, initialize } = useAuthStore();
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
   const [documents, setDocuments] = useState<Document[]>([]);
   const [analytics, setAnalytics] = useState<AnalyticsSummary | null>(null);
@@ -34,8 +34,10 @@ export default function DashboardPage() {
   }, [initialize]);
 
   useEffect(() => {
+    if (authLoading) return;
+
     if (!token && typeof window !== "undefined") {
-      router.push("/login");
+      router.replace("/login");
       return;
     }
 
@@ -61,7 +63,7 @@ export default function DashboardPage() {
     if (token) {
       fetchData();
     }
-  }, [token, router]);
+  }, [token, authLoading, router]);
 
   const getDifficultyBadge = (diff: string) => {
     switch (diff.toLowerCase()) {

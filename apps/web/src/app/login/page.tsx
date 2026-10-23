@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
@@ -9,11 +9,21 @@ import { Lock, Mail, Sparkles, ArrowRight, AlertCircle, Loader2 } from "lucide-r
 
 export default function LoginPage() {
   const router = useRouter();
-  const { setAuth } = useAuthStore();
+  const { token, isLoading: authLoading, initialize, setAuth } = useAuthStore();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    initialize();
+  }, [initialize]);
+
+  useEffect(() => {
+    if (!authLoading && token) {
+      router.replace("/dashboard");
+    }
+  }, [authLoading, token, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -23,7 +33,7 @@ export default function LoginPage() {
     try {
       const resp = await api.login({ email, password });
       setAuth(resp.user, resp.access_token);
-      router.push("/dashboard");
+      router.replace("/dashboard");
     } catch (err: any) {
       setError(err.message || "Invalid credentials.");
     } finally {

@@ -154,6 +154,7 @@ async def get_quiz(
         created_at=quiz.created_at,
     )
 
+@router.get("", response_model=List[QuizOutStudent])
 @router.get("/", response_model=List[QuizOutStudent])
 async def list_quizzes(
     current_user: User = Depends(get_current_user),

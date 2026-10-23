@@ -100,6 +100,7 @@ async def get_document_status(
         error_message=doc.error_message,
     )
 
+@router.get("", response_model=List[DocumentOut])
 @router.get("/", response_model=List[DocumentOut])
 async def list_documents(
     current_user: User = Depends(get_current_user),
