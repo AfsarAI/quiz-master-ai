@@ -1,5 +1,5 @@
-from typing import List
-from fastapi import APIRouter, Depends, HTTPException, status
+from typing import List, Optional
+from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
@@ -52,23 +52,36 @@ async def submit_quiz_attempt(
             db=db,
         )
     except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+        msg = str(e)
+        if any(term in msg.lower() for term in ["not found", "unauthorized"]):
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=msg)
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=msg)
     except Exception as e:
         import traceback
         traceback.print_exc()
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
+@router.get("/{attempt_id}/result", response_model=EvaluatedAttemptResponse)
 @router.get("/{attempt_id}", response_model=EvaluatedAttemptResponse)
 async def get_attempt_result(
     attempt_id: str,
+    quiz_id: Optional[str] = Query(None, description="Optional quiz ID to verify ownership and quiz alignment"),
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     """Retrieves full evaluation report, score breakdown, and source citations for an attempt."""
     try:
-        return await evaluation_service.get_attempt_result(attempt_id, current_user.id, db)
+        return await evaluation_service.get_attempt_result(
+            attempt_id=attempt_id,
+            user_id=current_user.id,
+            db=db,
+            quiz_id=quiz_id,
+        )
     except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+        msg = str(e)
+        if any(term in msg.lower() for term in ["not found", "unauthorized", "not belong"]):
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=msg)
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=msg)
 
 @router.get("", response_model=List[RecentAttemptItem])
 @router.get("/", response_model=List[RecentAttemptItem])

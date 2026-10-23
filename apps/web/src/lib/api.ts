@@ -139,14 +139,25 @@ class ApiClient {
   }
 
   async submitAttempt(attemptId: string, submission: SubmitAttemptRequest): Promise<EvaluatedAttemptResponse> {
-    return this.request<EvaluatedAttemptResponse>(`/attempts/${attemptId}/submit`, {
+    const cleanAttemptId = encodeURIComponent(attemptId.trim());
+    return this.request<EvaluatedAttemptResponse>(`/attempts/${cleanAttemptId}/submit`, {
       method: "POST",
       body: JSON.stringify(submission),
     });
   }
 
-  async getAttemptResult(attemptId: string): Promise<EvaluatedAttemptResponse> {
-    return this.request<EvaluatedAttemptResponse>(`/attempts/${attemptId}/result`);
+  async getAttemptResult(attemptId: string, quizId?: string): Promise<EvaluatedAttemptResponse> {
+    const cleanAttemptId = encodeURIComponent(attemptId.trim());
+    const query = quizId ? `?quiz_id=${encodeURIComponent(quizId.trim())}` : "";
+    try {
+      return await this.request<EvaluatedAttemptResponse>(`/attempts/${cleanAttemptId}/result${query}`);
+    } catch (err: any) {
+      // Graceful fallback to root attempt endpoint if /result is unavailable
+      if (err.message && err.message.includes("404")) {
+        return await this.request<EvaluatedAttemptResponse>(`/attempts/${cleanAttemptId}${query}`);
+      }
+      throw err;
+    }
   }
 
   // Analytics & Remediation Endpoints

@@ -124,8 +124,9 @@ export default function ExamTakePage() {
       localStorage.removeItem(`exam_active_${quizId}`);
       localStorage.removeItem(`exam_draft_${attemptId}`);
 
-      // Route to results
-      router.push(`/quiz/${quizId}/results?attemptId=${attemptId}`);
+      // Route to results using canonical returned attempt ID
+      const canonicalAttemptId = evalResp.attempt_id || attemptId;
+      router.push(`/quiz/${quizId}/results?attemptId=${canonicalAttemptId}`);
     } catch (err: any) {
       alert(`Submission error: ${err.message || "Please check your network and try again."}`);
       setSubmitting(false);

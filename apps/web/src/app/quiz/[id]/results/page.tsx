@@ -27,10 +27,13 @@ function ExamResultsContent() {
   const params = useParams();
   const searchParams = useSearchParams();
   const quizId = params.id as string;
-  const attemptId = searchParams.get("attemptId");
+  const rawAttemptId = searchParams.get("attemptId") || searchParams.get("attempt_id");
+  const attemptId = (rawAttemptId && rawAttemptId !== "undefined" && rawAttemptId !== "null" && rawAttemptId.trim() !== "")
+    ? rawAttemptId.trim()
+    : null;
   const router = useRouter();
 
-  const { token, initialize } = useAuthStore();
+  const { user, token, isLoading: authLoading, initialize } = useAuthStore();
   const [result, setResult] = useState<EvaluatedAttemptResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -39,48 +42,59 @@ function ExamResultsContent() {
     initialize();
   }, [initialize]);
 
+  const loadResult = React.useCallback(async () => {
+    if (!attemptId) {
+      setError("Attempt ID is missing or invalid. Please verify the URL or return to dashboard.");
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      setError(null);
+      const data = await api.getAttemptResult(attemptId, quizId);
+
+      // Verify that the result matches the URL quiz parameter if both are present
+      if (quizId && data.quiz_id && data.quiz_id !== quizId) {
+        setError("This examination result belongs to a different quiz.");
+        setIsLoading(false);
+        return;
+      }
+
+      setResult(data);
+
+      // Confetti celebration if student passed!
+      if (data.is_passed) {
+        try {
+          confetti({
+            particleCount: 80,
+            spread: 70,
+            origin: { y: 0.6 },
+            colors: ["#6366f1", "#10b981", "#8b5cf6", "#38bdf8"],
+          });
+        } catch (e) {
+          // Ignore if canvas is unavailable
+        }
+      }
+    } catch (err: any) {
+      setError(err.message || "Failed to load examination results.");
+    } finally {
+      setIsLoading(false);
+    }
+  }, [attemptId, quizId]);
+
   useEffect(() => {
+    if (authLoading) return;
+
     if (!token && typeof window !== "undefined") {
       router.push("/login");
       return;
     }
 
-    const loadResult = async () => {
-      if (!attemptId) {
-        setError("Attempt ID is missing.");
-        setIsLoading(false);
-        return;
-      }
-
-      try {
-        setIsLoading(true);
-        const data = await api.getAttemptResult(attemptId);
-        setResult(data);
-
-        // Confetti if student passed!
-        if (data.is_passed) {
-          try {
-            confetti({
-              particleCount: 80,
-              spread: 70,
-              origin: { y: 0.6 },
-              colors: ["#6366f1", "#10b981", "#8b5cf6", "#38bdf8"],
-            });
-          } catch (e) {
-            // Ignore if canvas is unavailable
-          }
-        }
-      } catch (err: any) {
-        setError(err.message || "Failed to load examination results.");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    if (token && attemptId) {
+    if (token) {
       loadResult();
     }
-  }, [quizId, attemptId, token, router]);
+  }, [token, authLoading, loadResult, router]);
 
   if (isLoading) {
     return (
@@ -97,12 +111,23 @@ function ExamResultsContent() {
         <AlertTriangle className="w-10 h-10 text-rose-400 mx-auto mb-3" />
         <h3 className="text-lg font-bold text-white mb-2">Result Card Error</h3>
         <p className="text-xs text-slate-400 mb-6">{error || "Result not found."}</p>
-        <Link
-          href="/dashboard"
-          className="px-4 py-2 rounded-xl bg-slate-800 text-xs font-semibold text-slate-200 hover:bg-slate-700"
-        >
-          Return to Dashboard
-        </Link>
+        <div className="flex items-center justify-center gap-3">
+          {attemptId && (
+            <button
+              onClick={() => loadResult()}
+              className="px-4 py-2 rounded-xl bg-indigo-600 text-xs font-semibold text-white hover:bg-indigo-500 transition-colors flex items-center gap-1.5 shadow-sm"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+              <span>Retry</span>
+            </button>
+          )}
+          <Link
+            href="/dashboard"
+            className="px-4 py-2 rounded-xl bg-slate-800 text-xs font-semibold text-slate-200 hover:bg-slate-700 transition-colors"
+          >
+            Return to Dashboard
+          </Link>
+        </div>
       </div>
     );
   }
