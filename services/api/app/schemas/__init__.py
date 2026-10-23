@@ -1,0 +1,68 @@
+from app.schemas.auth import UserBase, UserCreate, UserLogin, UserOut, Token, TokenPayload
+from app.schemas.document import (
+    DocumentOut,
+    DocumentStatusResponse,
+    DocumentUploadResponse,
+    DocumentChunkOut,
+)
+from app.schemas.quiz import (
+    OptionOutStudent,
+    OptionOutAdmin,
+    QuestionOutStudent,
+    QuestionOutAdmin,
+    QuizOutStudent,
+    QuizOutAdmin,
+    QuizGenerateRequest,
+    QuizGenerateResponse,
+    GeneratedOption,
+    GeneratedQuestion,
+    GeneratedQuiz,
+)
+from app.schemas.attempt import (
+    StartAttemptRequest,
+    StartAttemptResponse,
+    StudentAnswerItem,
+    SubmitAttemptRequest,
+    QuestionReviewItem,
+    EvaluatedAttemptResponse,
+    SubjectiveGradingResult,
+)
+from app.schemas.analytics import (
+    UserWeakAreaOut,
+    AnalyticsSummaryResponse,
+    AdaptiveQuizRequest,
+)
+
+__all__ = [
+    "UserBase",
+    "UserCreate",
+    "UserLogin",
+    "UserOut",
+    "Token",
+    "TokenPayload",
+    "DocumentOut",
+    "DocumentStatusResponse",
+    "DocumentUploadResponse",
+    "DocumentChunkOut",
+    "OptionOutStudent",
+    "OptionOutAdmin",
+    "QuestionOutStudent",
+    "QuestionOutAdmin",
+    "QuizOutStudent",
+    "QuizOutAdmin",
+    "QuizGenerateRequest",
+    "QuizGenerateResponse",
+    "GeneratedOption",
+    "GeneratedQuestion",
+    "GeneratedQuiz",
+    "StartAttemptRequest",
+    "StartAttemptResponse",
+    "StudentAnswerItem",
+    "SubmitAttemptRequest",
+    "QuestionReviewItem",
+    "EvaluatedAttemptResponse",
+    "SubjectiveGradingResult",
+    "UserWeakAreaOut",
+    "AnalyticsSummaryResponse",
+    "AdaptiveQuizRequest",
+]

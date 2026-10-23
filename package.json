@@ -1,0 +1,29 @@
+{
+  "name": "quiz-master-ai",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Quiz-Master-AI: Enterprise-grade, AI-first educational assessment and personalized learning platform",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:web": "npm --prefix apps/web run dev",
+    "build:web": "npm --prefix apps/web run build",
+    "dev:mobile": "npm --prefix apps/mobile start",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down",
+    "docker:logs": "docker compose logs -f"
+  },
+  "keywords": [
+    "quiz",
+    "education",
+    "rag",
+    "fastapi",
+    "nextjs",
+    "expo",
+    "pgvector"
+  ],
+  "author": "Quiz-Master-AI Team",
+  "license": "MIT"
+}
