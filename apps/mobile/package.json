@@ -24,5 +24,7 @@
     "@types/react": "~18.2.45",
     "typescript": "~5.3.3"
   },
+  "author": "Mohd Afsar <https://github.com/AfsarAI>",
+  "license": "MIT",
   "private": true
 }

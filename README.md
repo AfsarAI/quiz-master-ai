@@ -6,8 +6,52 @@
 [![Next.js 14](https://img.shields.io/badge/Next.js-14%2B%20App%20Router-black.svg)](https://nextjs.org/)
 [![React Native Expo](https://img.shields.io/badge/Expo-React%20Native-4630EB.svg)](https://expo.dev/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Author: Mohd Afsar](https://img.shields.io/badge/Author-Mohd%20Afsar-blueviolet.svg)](https://github.com/AfsarAI)
 
-**Quiz-Master-AI** is an enterprise-grade, AI-first educational assessment and personalized learning platform. By coupling **Retrieval-Augmented Generation (RAG)**, dense vector embeddings with **pgvector**, and structured LLM evaluation agents, Quiz-Master-AI automates the entire educational assessment lifecycle: from document ingestion and grounded question authoring to tamper-proof timed examinations, deterministic/rubric grading, and targeted conceptual weakness remediation.
+**Quiz-Master-AI** is an enterprise-grade, AI-first educational assessment and personalized learning platform. By coupling **Retrieval-Augmented Generation (RAG)**, dense vector embeddings with **pgvector**, and structured LLM evaluation pipelines, Quiz-Master-AI automates the educational assessment lifecycle: from document ingestion and grounded question authoring to tamper-proof timed examinations, deterministic/rubric grading, and targeted conceptual weakness remediation.
+
+> 👨‍💻 **Author & Lead Developer**: **Mohd Afsar** ([@AfsarAI](https://github.com/AfsarAI))  
+> 💡 **Project Heritage & Evolution**: **Quiz-Master-AI** is the next-generation, AI-first evolution of [Quiz-Master-V2](https://github.com/AfsarAI/quiz-master-v2), conceived and developed by **Mohd Afsar**. While the original project established conventional quiz and curriculum management workflows, Quiz-Master-AI reimagines the platform from the ground up with automated document understanding, vector-based RAG generation, and server-side evaluation.
+
+---
+
+## 🏛️ Project Background & Heritage: Evolution from Quiz-Master-V2
+
+### The Foundational Project: Quiz-Master-V2
+[Quiz-Master-V2](https://github.com/AfsarAI/quiz-master-v2) was the original iteration of the Quiz Master concept (developed by [Mohd Afsar](https://github.com/AfsarAI) for the Modern Application Development 2 curriculum at IIT Madras). It provided a complete, conventional web assessment platform built with **Flask**, **SQLite**, **Celery**, and **Vue 3 (Bootstrap 5)**.
+
+In Quiz-Master-V2, quiz administration followed a traditional, manually managed workflow:
+- **Hierarchical Curriculum Taxonomy**: Administrators manually maintained a rigid educational hierarchy (`Qualification` → `Subject` → `Chapter` → `Quiz` → `Question`).
+- **Manual Question Authoring**: Administrators and educators keyed in questions, multiple-choice options, and remarks individually via administrative CRUD forms.
+- **Asynchronous Task Automation**: Celery workers managed scheduled tasks, including asynchronous CSV exports of student scores, daily inactivity reminders via Google Chat webhooks, and monthly performance report emails via SMTP.
+
+### The Paradigm Shift: Why Quiz-Master-AI Was Developed
+While Quiz-Master-V2 demonstrated solid full-stack curriculum management, manual question entry and static assessment workflows present inherent operational constraints:
+1. **Authoring Overhead**: Creating and maintaining large question banks across disciplines requires dozens of hours of manual authoring.
+2. **Syllabus Drift**: Updating questions when source textbooks, lecture notes, or syllabi change requires manual line-by-line maintenance.
+3. **Binary Feedback**: Traditional static MCQs evaluate binary correctness ("Right" or "Wrong") without grounding explanations in specific source texts or evaluating conceptual nuance in open-ended answers.
+
+**Quiz-Master-AI** was conceived and architected by **Mohd Afsar** as an independent, ground-up reimagination of the assessment platform to transform this manual workflow into an **AI-first, document-grounded assessment system**:
+- Instead of manually authoring questions, educators can upload raw study materials (PDF, DOCX, TXT) and generate source-grounded quizzes directly from the text.
+- Retrieval-Augmented Generation (RAG) grounds questions in retrieved document passages with explicit page and quote citations.
+- Server-side dual evaluation pairs deterministic grading for objective items with structured rubric-assisted feedback for short-answer questions.
+- Rather than reusing or patching the older Flask/Vue 3 codebase, Quiz-Master-AI was architected anew with modern technologies selected specifically for vector search, asynchronous AI orchestration, and omnichannel delivery (FastAPI, PostgreSQL 16 + pgvector, Next.js 14 App Router, and React Native Expo).
+
+### Architectural & Functional Comparison
+
+| Dimension | Quiz-Master-V2 (Original Foundation) | Quiz-Master-AI (AI-First Evolution) |
+|---|---|---|
+| **Repository** | [AfsarAI/quiz-master-v2](https://github.com/AfsarAI/quiz-master-v2) | [AfsarAI/quiz-master-ai](https://github.com/AfsarAI/quiz-master-ai) |
+| **Primary Paradigm** | Conventional, manual quiz and content management | AI-driven document extraction, RAG generation, and adaptive learning |
+| **Question Source** | Manually entered by administrators via CRUD forms | Automated RAG extraction & grounding from uploaded documents |
+| **Content Structure** | Fixed relational taxonomy (`Qualification` → `Subject` → `Chapter`) | Dynamic document-grounded vector chunks with semantic topic tagging |
+| **Backend Framework** | Python / Flask 3, Flask-RESTful, Flask-Security-Too | Python 3.12 / FastAPI (async), Pydantic v2, Instructor |
+| **Database & Vector Search**| SQLite with Flask-SQLAlchemy (relational only) | PostgreSQL 16 + pgvector (HNSW cosine similarity) & async SQLAlchemy 2.0 |
+| **Web Frontend** | Vue 3 (Options API / SFC), Vuex 4, Bootstrap 5 | Next.js 14+ (App Router, Server/Client components), Tailwind CSS, Zustand |
+| **Mobile Access** | Mobile-responsive web browser only | Dedicated cross-platform React Native + Expo client (iOS & Android) |
+| **Grading & Evaluation** | Static binary evaluation (Option ID comparison) | Dual engine: deterministic objective grading + rubric-assisted subjective feedback |
+| **Background Processing**| Celery + Redis (CSV export, webhooks, email reports) | Celery & FastAPI BackgroundTasks (parsing, chunking, embeddings, RAG generation) |
+| **Client Exam Security**| Standard web form submission | Zero client-trust exam shield (pre-submission answer key & rubric suppression) |
 
 ---
 
@@ -16,9 +60,9 @@
 1. **Automated Document Ingestion & Vector Indexing**:
    - Sanitize, parse, and recursively chunk educational materials (PDF, DOCX, TXT) with semantic 100-token overlap.
    - Vectorize chunks using high-dimensional dense embeddings (`text-embedding-3-small` / Gemini `text-embedding-004`) indexed with HNSW in PostgreSQL 16.
-2. **Hallucination-Free RAG Quiz Generation**:
-   - Strictly source-grounded question generation with Pydantic & Instructor structured schema enforcement.
-   - Every generated question contains a verbatim quotation and page citation from the source material.
+2. **Source-Grounded RAG Quiz Generation**:
+   - Source-grounded question generation with Pydantic & Instructor structured schema enforcement.
+   - Every generated question contains a verbatim quotation and page citation from the source material to minimize hallucinations.
 3. **Zero Client-Side Trust Exam Portal**:
    - The test-taking client **never receives correct options, explanations, or secret rubrics** before submission.
    - Client-side exam runtime features auto-save to `localStorage` / `AsyncStorage` and a **Visual Question Palette** (⚪ Not Visited, 🔵 Current, 🟢 Answered, 🔴 Not Answered, 🟣 Review).
@@ -257,5 +301,46 @@ Scan the QR code with Expo Go on your mobile device or press `a` for Android Emu
 
 ---
 
+## 📊 Implementation Status: Verified Capabilities vs. Planned Roadmap
+
+To provide complete transparency for technical reviewers and collaborators, the table below distinguishes between **verified, working capabilities** in the codebase and **planned roadmap features**:
+
+### ✅ Verified & Implemented in Current Codebase
+
+| Capability | Module / Layer | Implementation & Verification Evidence |
+|---|---|---|
+| **Role-Safe Authentication** | FastAPI / JWT | Argon2id password hashing; public registration strictly rejects `admin` role (`tests/test_auth.py` passing). |
+| **Document Storage & Magic Bytes** | Storage Service | Enforces true magic-byte MIME checking (PDF, DOCX, TXT) and 25MB limits. Dual-backend S3/MinIO with automatic local disk fallback (`tests/test_documents.py` passing). |
+| **Document Parsing & Semantic Chunking** | Extraction Engine | Text extraction via `pypdf`, `python-docx`, and UTF-8 parser. Semantic 100-token overlap chunking (`tests/test_documents.py` passing). |
+| **Dense Vector Embeddings** | Embedding Service | 1536-dimensional vector embedding model support (Gemini & OpenAI) with deterministic offline fallback vectors (`tests/test_documents.py` passing). |
+| **RAG Grounded Quiz Generation** | LLM Engine | Source-grounded question authoring with Pydantic & Instructor structured schema enforcement, verbatim quotes, and page citations (`tests/test_quizzes.py` passing). |
+| **Prompt Injection Defense** | Ingestion Controller | Injected document text is wrapped in passive `<context_chunks>` XML boundary markers to separate instructions from untrusted data. |
+| **Zero Client-Trust Exam Delivery** | Quiz Controller | Test-taking endpoints (`mode=exam`) strip correct options, explanations, and grading rubrics prior to submission (`tests/test_quizzes.py` passing). |
+| **Server-Side Dual Grading Engine** | Evaluation Service | Deterministic evaluation for objective questions (MCQs, Multi-Select, True/False) and structured rubric LLM grading for short-answer questions (`tests/test_evaluation.py` passing). |
+| **Adaptive Weakness Tracking** | Analytics Service | Diagnostic tracking of student weak areas by subject and topic (`user_weak_areas`), feeding adaptive practice recommendations. |
+| **Modern Web Portal** | Next.js 14 App Router | 10 static/dynamic routes (`/login`, `/register`, `/dashboard`, `/documents`, `/quiz/create`, `/quiz/[id]/take`, `/quiz/[id]/results`, `/analytics`) with visual question palette and auto-save (Production build: 0 errors). |
+| **Cross-Platform Mobile App** | React Native Expo | Mobile navigation stack with screens for Auth, Dashboard, Documents, Exam with mobile palette, and Results review (`tsc --noEmit`: 0 errors). |
+| **Database Migrations** | Alembic Async Engine | Async migrations supporting pgvector extension and 9 relational tables (`001_initial_schema (head)`). |
+
+### 🧭 Planned Roadmap & In-Progress Enhancements
+
+| Feature / Initiative | Current Status | Planned Implementation |
+|---|---|---|
+| **Distributed Task Queue Scaling** | Celery task scaffolding configured in `services/worker/` | Scale Celery worker cluster across independent containers for massive batch uploads (currently handled synchronously or via FastAPI `BackgroundTasks` in local dev). |
+| **Scanned Document OCR** | Digital text extraction active | Integrate Tesseract OCR / multimodal vision parsing for scanned, image-only PDFs. |
+| **Standalone Mobile Store Builds** | Expo client code verified | Configure EAS Build pipelines for Google Play Store (`.apk`/`.aab`) and Apple App Store (`.ipa`) release packages. |
+| **Interactive Remedial Dialogue** | Analytics weakness map active | Add a multi-turn conversational AI tutor allowing students to dispute marks or ask follow-up questions directly on missed exam items. |
+
+---
+
+## 👤 Author & Maintainer
+
+**Mohd Afsar**
+- **GitHub**: [@AfsarAI](https://github.com/AfsarAI)
+- **Current Project**: [Quiz-Master-AI](https://github.com/AfsarAI/quiz-master-ai)
+- **Original Foundation**: [Quiz-Master-V2](https://github.com/AfsarAI/quiz-master-v2)
+
+---
+
 ## 📜 License
-MIT License. Built with ❤️ by the Quiz-Master-AI Engineering Team.
+MIT License. Designed, built, and maintained by **Mohd Afsar**.
