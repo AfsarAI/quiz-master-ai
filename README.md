@@ -5,7 +5,7 @@
 [![PostgreSQL 16](https://img.shields.io/badge/PostgreSQL-16%20%2B%20pgvector-336791.svg)](https://github.com/pgvector/pgvector)
 [![Next.js 14](https://img.shields.io/badge/Next.js-14%2B%20App%20Router-black.svg)](https://nextjs.org/)
 [![React Native Expo](https://img.shields.io/badge/Expo-React%20Native-4630EB.svg)](https://expo.dev/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Author: Mohd Afsar](https://img.shields.io/badge/Author-Mohd%20Afsar-blueviolet.svg)](https://github.com/AfsarAI)
 
 **Quiz-Master-AI** is an enterprise-grade, AI-first educational assessment and personalized learning platform. By coupling **Retrieval-Augmented Generation (RAG)**, dense vector embeddings with **pgvector**, and structured LLM evaluation pipelines, Quiz-Master-AI automates the educational assessment lifecycle: from document ingestion and grounded question authoring to tamper-proof timed examinations, deterministic/rubric grading, and targeted conceptual weakness remediation.
