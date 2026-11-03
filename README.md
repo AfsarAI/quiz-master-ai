@@ -463,4 +463,8 @@ To provide complete transparency for technical reviewers and collaborators, the 
 ---
 
 ## 📜 License
-MIT License. Designed, built, and maintained by **Mohd Afsar**.
+
+This project is licensed under the [MIT License](LICENSE).
+
+Copyright (c) 2026 Mohd Afsar.
+
